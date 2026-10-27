@@ -1,0 +1,26 @@
+{
+  "name": "mira-hrt-studio",
+  "version": "1.5.0",
+  "description": "A privacy-first HRT medication log and estradiol concentration model visualizer.",
+  "type": "module",
+  "private": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test",
+    "check": "node --check assets/app.js && node --check src/model.js && node --check src/data.js"
+  },
+  "keywords": [
+    "hrt",
+    "estradiol",
+    "pharmacokinetics",
+    "health-tracker",
+    "clinical-summary",
+    "pdf",
+    "github-pages",
+    "privacy-first"
+  ],
+  "license": "MIT"
+}

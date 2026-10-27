@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="MIRA 是面向跨性别女性的隐私优先 HRT 用药与雌二醇浓度估算工具，支持药品记录、化验对照、趋势图和数据导出。"
+    />
+    <meta name="theme-color" content="#2d1624" />
+    <meta property="og:title" content="MIRA · HRT 用药记录与浓度估算" />
+    <meta
+      property="og:description"
+      content="记录真实用药与化验，查看外源雌二醇的模型估算。仅供教育与记录，不用于处方调整。"
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" as="image" href="assets/medication-still-life.jpg" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="assets/chart.umd.min.js" defer></script>
+    <script src="assets/lucide.min.js" defer></script>
+    <script src="assets/opencc.full.js" defer></script>
+    <script type="module" src="assets/app.js"></script>
+    <title>MIRA · HRT 用药记录与浓度估算</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <div class="app-shell" id="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="主导航">
+        <a class="brand" href="#" data-view="overview" aria-label="MIRA 首页">
+          <span class="brand-mark" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+          <span class="brand-copy">
+            <strong>MIRA</strong>
+            <small>HRT STUDIO</small>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="功能导航">
+          <p class="nav-label">Workspace</p>
+          <button class="nav-item is-active" type="button" data-view="overview">
+            <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+            <span>总览</span>
+          </button>
+          <button class="nav-item" type="button" data-view="guide">
+            <i data-lucide="book-marked" aria-hidden="true"></i>
+            <span>HRT 指南</span>
+          </button>
+          <button class="nav-item" type="button" data-view="doses">
+            <i data-lucide="pill" aria-hidden="true"></i>
+            <span>用药记录</span>
+          </button>
+          <button class="nav-item" type="button" data-view="labs">
+            <i data-lucide="flask-conical" aria-hidden="true"></i>
+            <span>化验结果</span>
+          </button>
+          <button class="nav-item" type="button" data-view="library">
+            <i data-lucide="book-open" aria-hidden="true"></i>
+            <span>药品资料</span>
+          </button>
+          <button class="nav-item" type="button" data-view="safety">
+            <i data-lucide="shield-check" aria-hidden="true"></i>
+            <span>模型与安全</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-visual">
+          <img
+            src="assets/medication-still-life.jpg"
+            alt="药品静物视觉"
+            width="1400"
+            height="979"
+          />
+          <div class="sidebar-visual-scrim"></div>
+          <div class="sidebar-visual-copy">
+            <span><i data-lucide="lock-keyhole" aria-hidden="true"></i> PRIVATE</span>
+            <strong>只记录在你的浏览器里</strong>
+            <p>无需账号，不上传用药与化验数据。</p>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="privacy-copy">
+            <span class="privacy-dot" aria-hidden="true"></span>
+            <div>
+              <strong>Local-first</strong>
+              <p>MIRA v1.5 · Community guide</p>
+            </div>
+          </div>
+          <button
+            class="sidebar-settings"
+            type="button"
+            data-onboarding-open
+            aria-label="打开语言与引导"
+          >
+            <i data-lucide="languages" aria-hidden="true"></i>
+          </button>
+        </div>
+      </aside>
+
+      <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+      <main class="workspace" id="main-content">
+        <header class="topbar">
+          <div class="topbar-leading">
+            <button
+              class="icon-button menu-button"
+              id="menu-button"
+              type="button"
+              aria-label="打开导航菜单"
+              aria-controls="sidebar"
+              aria-expanded="false"
+            >
+              <i data-lucide="menu" aria-hidden="true"></i>
+            </button>
+            <div class="breadcrumb">
+              <span>MIRA</span>
+              <i data-lucide="chevron-right" aria-hidden="true"></i>
+              <strong id="current-view-label">总览</strong>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <label class="language-select">
+              <i data-lucide="languages" aria-hidden="true"></i>
+              <select id="language-select" aria-label="界面语言">
+                <option value="zh-Hans">简体中文</option>
+                <option value="zh-Hant">繁體中文</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+            <span class="sync-state">
+              <i data-lucide="hard-drive" aria-hidden="true"></i>
+              已保存到本机
+            </span>
+            <button
+              class="ghost-button"
+              type="button"
+              data-dialog-open="report-dialog"
+            >
+              <i data-lucide="file-down" aria-hidden="true"></i>
+              <span>临床摘要</span>
+            </button>
+            <button class="ghost-button" type="button" data-dialog-open="lab-dialog">
+              <i data-lucide="flask-conical" aria-hidden="true"></i>
+              <span>记录化验</span>
+            </button>
+            <button
+              class="primary-button"
+              type="button"
+              data-dialog-open="dose-dialog"
+              aria-label="记录用药"
+            >
+              <i data-lucide="plus" aria-hidden="true"></i>
+              <span>记录用药</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="demo-banner" id="demo-banner">
+          <div>
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            <p>
+              <strong>正在查看演示数据</strong>
+              <span>用于体验曲线和功能，不代表任何用药建议。</span>
+            </p>
+          </div>
+          <div class="demo-actions">
+            <button type="button" class="text-button" id="reset-demo-button">重置示例</button>
+            <button type="button" class="small-button" id="clear-demo-button">
+              清空并开始记录
+            </button>
+          </div>
+        </div>
+
+        <section class="view is-active" data-view-panel="overview" aria-labelledby="overview-title">
+          <header class="page-heading">
+            <div>
+              <p class="eyebrow" id="today-label">TODAY</p>
+              <h1 id="overview-title">你的 HRT 记录，清楚一点。</h1>
+              <p class="page-subtitle">
+                对照真实化验与外源雌二醇估算，留意变化，而不是猜测。
+              </p>
+            </div>
+            <div class="date-chip">
+              <span id="date-day">27</span>
+              <div>
+                <strong id="date-month">OCT</strong>
+                <small id="date-weekday">星期二</small>
+              </div>
+            </div>
+          </header>
+
+          <div class="metric-grid" aria-label="关键指标">
+            <article class="metric-card metric-primary">
+              <div class="metric-heading">
+                <span>当前外源 E2 估算</span>
+                <i data-lucide="activity" aria-hidden="true"></i>
+              </div>
+              <strong class="metric-value">
+                <span id="current-e2">—</span><small id="current-e2-unit">pg/mL</small>
+              </strong>
+              <p class="metric-foot" id="current-e2-status">等待用药记录</p>
+            </article>
+
+            <article class="metric-card">
+              <div class="metric-heading">
+                <span>最近真实化验</span>
+                <i data-lucide="flask-conical" aria-hidden="true"></i>
+              </div>
+              <strong class="metric-value">
+                <span id="latest-lab-e2">—</span><small id="latest-lab-unit">pg/mL</small>
+              </strong>
+              <p class="metric-foot" id="latest-lab-date">尚未录入化验</p>
+            </article>
+
+            <article class="metric-card">
+              <div class="metric-heading">
+                <span>过去 7 天用药</span>
+                <i data-lucide="calendar-check-2" aria-hidden="true"></i>
+              </div>
+              <strong class="metric-value">
+                <span id="week-dose-count">0</span><small>次记录</small>
+              </strong>
+              <p class="metric-foot" id="week-dose-caption">记录从今天开始</p>
+            </article>
+
+            <article class="metric-card">
+              <div class="metric-heading">
+                <span>数据完整性</span>
+                <i data-lucide="circle-check-big" aria-hidden="true"></i>
+              </div>
+              <strong class="metric-value metric-text">
+                <span id="data-health-label">仅本机</span>
+              </strong>
+              <p class="metric-foot">未连接任何云端服务</p>
+            </article>
+          </div>
+
+          <section class="chart-card" aria-labelledby="curve-title">
+            <div class="chart-header">
+              <div>
+                <div class="title-with-badge">
+                  <h2 id="curve-title">雌二醇浓度曲线</h2>
+                  <span class="model-badge">MODEL ESTIMATE</span>
+                </div>
+                <p>外源雌二醇贡献的模型估算，不包含内源分泌与个体代谢差异。旧记录缺少剂型参数时采用标准默认值。</p>
+              </div>
+              <div class="chart-controls">
+                <div class="segmented-control" role="group" aria-label="浓度单位">
+                  <button
+                    type="button"
+                    class="is-active"
+                    data-concentration-unit="pg/mL"
+                    aria-pressed="true"
+                  >
+                    pg/mL
+                  </button>
+                  <button
+                    type="button"
+                    data-concentration-unit="pmol/L"
+                    aria-pressed="false"
+                  >
+                    pmol/L
+                  </button>
+                </div>
+                <div class="segmented-control" role="group" aria-label="图表时间范围">
+                  <button type="button" data-chart-range="7" aria-pressed="false">7D</button>
+                  <button
+                    type="button"
+                    data-chart-range="14"
+                    class="is-active"
+                    aria-pressed="true"
+                  >
+                    14D
+                  </button>
+                  <button type="button" data-chart-range="30" aria-pressed="false">30D</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-legend" aria-hidden="true">
+              <span><i class="legend-line"></i>估算曲线</span>
+              <span><i class="legend-band"></i>文献常见参考带</span>
+              <span><i class="legend-dot"></i>真实化验</span>
+            </div>
+
+            <div class="chart-wrap">
+              <canvas
+                id="e2-chart"
+                role="img"
+                aria-label="雌二醇浓度估算图"
+              >雌二醇浓度估算图</canvas>
+              <div class="chart-empty" id="chart-empty" hidden>
+                <i data-lucide="chart-line" aria-hidden="true"></i>
+                <strong id="chart-empty-title">还没有可估算的用药记录</strong>
+                <p id="chart-empty-copy">添加带药代模型的雌二醇药物后，这里会生成曲线。</p>
+                <button
+                  class="text-button chart-empty-action"
+                  id="chart-empty-action"
+                  type="button"
+                  data-view="library"
+                  hidden
+                >
+                  查看可估算药品
+                  <i data-lucide="arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="chart-insight">
+              <div class="insight-icon">
+                <i data-lucide="scan-line" aria-hidden="true"></i>
+              </div>
+              <div>
+                <strong id="curve-insight-title">等待记录</strong>
+                <p id="curve-insight-copy">
+                  曲线会根据你录入的实际用药时间和剂量自动更新。
+                </p>
+              </div>
+              <button class="text-button" type="button" data-view="safety">
+                了解模型
+                <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </section>
+
+          <div class="overview-grid">
+            <section class="panel today-panel" aria-labelledby="today-dose-title">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-kicker">TODAY'S ENTRIES</p>
+                  <h2 id="today-dose-title">今天的记录</h2>
+                </div>
+                <button class="icon-button subtle" type="button" data-dialog-open="dose-dialog" aria-label="添加用药记录">
+                  <i data-lucide="plus" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="today-list" id="today-dose-list"></div>
+            </section>
+
+            <section class="panel lab-snapshot" aria-labelledby="lab-snapshot-title">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-kicker">LATEST LAB</p>
+                  <h2 id="lab-snapshot-title">最近化验</h2>
+                </div>
+                <button class="text-button" type="button" data-view="labs">
+                  全部
+                  <i data-lucide="arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="latest-lab-snapshot" class="latest-lab-content"></div>
+            </section>
+
+            <section class="panel routine-panel" aria-labelledby="routine-title">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-kicker">YOUR ROUTINE</p>
+                  <h2 id="routine-title">常用药品</h2>
+                </div>
+                <button class="text-button" type="button" data-view="library">
+                  药品库
+                  <i data-lucide="arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="routine-list" class="routine-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="guide" aria-labelledby="guide-title" hidden>
+          <header class="page-heading compact-heading guide-heading">
+            <div>
+              <p class="eyebrow">MTF WIKI · CURATED GUIDE</p>
+              <h1 id="guide-title">HRT 指南</h1>
+              <p class="page-subtitle">
+                将 MTF Wiki 的公开 HRT 资料整理成可快速浏览的专题索引，完整内容请前往原文阅读。
+              </p>
+            </div>
+            <div class="guide-heading-actions">
+              <span class="guide-license-badge">CC BY-SA 4.0</span>
+              <a
+                class="primary-button"
+                id="mtf-wiki-home-link"
+                href="https://mtf.wiki/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i data-lucide="external-link" aria-hidden="true"></i>
+                打开 MTF Wiki
+              </a>
+            </div>
+          </header>
+
+          <div class="guide-source-banner">
+            <div class="guide-source-mark" aria-hidden="true">
+              <span>MTF</span>
+              <strong>WIKI</strong>
+            </div>
+            <div class="guide-source-copy">
+              <p class="panel-kicker">COMMUNITY KNOWLEDGE</p>
+              <h2>以原文为准，不让导航替代医学判断。</h2>
+              <p>
+                本栏目是 MIRA 对 MTF Wiki 公开页面的人工整理索引。下文摘要由 MIRA 编写，不复制原站全文；打开专题后，可查看 MTF Wiki 的最新版本与修订记录。
+              </p>
+              <p>部分专题目前仅提供简体中文原文。</p>
+            </div>
+            <div class="guide-source-meta">
+              <span>来源：Project Trans</span>
+              <span>链接核对：<strong id="guide-checked-date">2026-10-27</strong></span>
+              <a
+                id="mtf-wiki-source-link"
+                href="https://github.com/project-trans/MtF-wiki"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub 源仓库
+                <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="guide-safety-note">
+            <i data-lucide="triangle-alert" aria-hidden="true"></i>
+            <div>
+              <strong>指南是阅读材料，不是个体处方。</strong>
+              <p>
+                药物选择、剂量调整、停药和检查频率应由熟悉跨性别医疗的临床医生结合病史决定。若出现严重不适，请联系当地急救或医疗机构。
+              </p>
+            </div>
+          </div>
+
+          <div class="guide-toolbar">
+            <label class="search-field guide-search" for="guide-search">
+              <i data-lucide="search" aria-hidden="true"></i>
+              <input id="guide-search" type="search" placeholder="搜索药物、监测或就医资源" />
+            </label>
+            <div class="filter-chips" id="guide-category-filter" role="group" aria-label="指南类别">
+              <button class="filter-chip is-active" type="button" data-guide-category="all">
+                全部
+              </button>
+              <button class="filter-chip" type="button" data-guide-category="start">
+                快速开始
+              </button>
+              <button class="filter-chip" type="button" data-guide-category="medicine">
+                药物专题
+              </button>
+              <button class="filter-chip" type="button" data-guide-category="resources">
+                就医资源
+              </button>
+            </div>
+            <span class="guide-result-count" id="guide-result-count"></span>
+          </div>
+
+          <div class="guide-content" id="guide-content"></div>
+          <div class="table-empty" id="guide-empty" hidden>
+            <i data-lucide="search-x" aria-hidden="true"></i>
+            <strong>没有匹配的指南条目</strong>
+            <p>尝试搜索药物名、检查主题或地区。</p>
+          </div>
+
+          <section class="guide-mira-bridge" aria-labelledby="guide-bridge-title">
+            <div>
+              <p class="panel-kicker">USE IT WITH MIRA</p>
+              <h2 id="guide-bridge-title">先阅读，再记录。</h2>
+              <p>
+                MIRA 只负责整理你实际获得的用药和化验记录，不会从指南自动生成剂量方案。
+              </p>
+            </div>
+            <ol>
+              <li><span>01</span>在 MTF Wiki 阅读完整专题。</li>
+              <li><span>02</span>与医生确认实际处方和检查计划。</li>
+              <li><span>03</span>在 MIRA 记录真实剂量、时间与化验。</li>
+            </ol>
+          </section>
+
+          <section class="guide-license-note" aria-label="来源与许可证">
+            <div>
+              <p class="panel-kicker">SOURCE &amp; LICENSE</p>
+              <h2>来源与许可证</h2>
+              <p>
+                MtF.wiki 内容由 Project Trans 及社区贡献者维护，除特别注明外采用 CC BY-SA 4.0。MIRA 的指南索引与摘要已注明来源；引用和改编内容按相同许可证共享。
+              </p>
+            </div>
+            <div class="guide-license-links">
+              <a
+                id="mtf-wiki-license-link"
+                href="https://creativecommons.org/licenses/by-sa/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                CC BY-SA 4.0
+                <i data-lucide="external-link" aria-hidden="true"></i>
+              </a>
+              <a
+                id="mtf-wiki-edit-link"
+                href="https://github.com/project-trans/MtF-wiki"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                查看项目与贡献
+                <i data-lucide="external-link" aria-hidden="true"></i>
+              </a>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" data-view-panel="doses" aria-labelledby="doses-title" hidden>
+          <header class="page-heading compact-heading">
+            <div>
+              <p class="eyebrow">MEDICATION LOG</p>
+              <h1 id="doses-title">用药记录</h1>
+              <p class="page-subtitle">记录实际使用时间与剂量。这里不会生成或推荐剂量。</p>
+            </div>
+            <button class="primary-button" type="button" data-dialog-open="dose-dialog">
+              <i data-lucide="plus" aria-hidden="true"></i>
+              新增记录
+            </button>
+          </header>
+
+          <div class="toolbar">
+            <div class="filter-group">
+              <label class="search-field" for="dose-search">
+                <i data-lucide="search" aria-hidden="true"></i>
+                <input id="dose-search" type="search" placeholder="搜索药品或备注" />
+              </label>
+              <select id="dose-category-filter" aria-label="按药品类别筛选">
+                <option value="all">全部类别</option>
+              </select>
+            </div>
+            <button class="ghost-button" type="button" id="export-doses-button">
+              <i data-lucide="download" aria-hidden="true"></i>
+              导出 CSV
+            </button>
+          </div>
+
+          <section class="table-panel" aria-label="全部用药记录">
+            <div class="table-scroll">
+              <table class="data-table dose-table">
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>药品</th>
+                    <th>剂量</th>
+                    <th>途径</th>
+                    <th>重复计划</th>
+                    <th>备注</th>
+                    <th><span class="sr-only">操作</span></th>
+                  </tr>
+                </thead>
+                <tbody id="dose-table-body"></tbody>
+              </table>
+            </div>
+            <div class="table-empty" id="dose-table-empty" hidden>
+              <i data-lucide="clipboard-list" aria-hidden="true"></i>
+              <strong>没有找到记录</strong>
+              <p>尝试更换筛选条件，或添加一条新的用药记录。</p>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" data-view-panel="labs" aria-labelledby="labs-title" hidden>
+          <header class="page-heading compact-heading">
+            <div>
+              <p class="eyebrow">LAB RESULTS</p>
+              <h1 id="labs-title">化验结果</h1>
+              <p class="page-subtitle">
+                真实化验是判断水平的核心。请同时记录采血时间与末次给药时间。
+              </p>
+            </div>
+            <div class="heading-actions">
+              <button class="ghost-button" type="button" data-dialog-open="report-dialog">
+                <i data-lucide="file-down" aria-hidden="true"></i>
+                临床摘要
+              </button>
+              <button class="primary-button" type="button" data-dialog-open="lab-dialog">
+                <i data-lucide="plus" aria-hidden="true"></i>
+                记录化验
+              </button>
+            </div>
+          </header>
+
+          <div class="lab-metric-grid">
+            <article class="lab-metric">
+              <span><i data-lucide="activity" aria-hidden="true"></i>雌二醇 E2</span>
+              <strong id="lab-summary-e2">—</strong>
+              <p id="lab-summary-e2-date">暂无化验</p>
+            </article>
+            <article class="lab-metric">
+              <span><i data-lucide="test-tube-diagonal" aria-hidden="true"></i>睾酮 T</span>
+              <strong id="lab-summary-t">—</strong>
+              <p id="lab-summary-t-date">暂无化验</p>
+            </article>
+            <article class="lab-metric">
+              <span><i data-lucide="circle-dot-dashed" aria-hidden="true"></i>催乳素 PRL</span>
+              <strong id="lab-summary-prl">—</strong>
+              <p id="lab-summary-prl-date">暂无化验</p>
+            </article>
+          </div>
+
+          <section class="chart-card lab-trend-card" aria-labelledby="lab-trend-title">
+            <div class="chart-header">
+              <div>
+                <div class="title-with-badge">
+                  <h2 id="lab-trend-title">真实 E2 化验趋势</h2>
+                  <span class="lab-badge">LAB VALUES</span>
+                </div>
+                <p>仅绘制你手动录入的实验室数值，不做插值预测。</p>
+              </div>
+              <span class="reference-pill">参考带 100–200 pg/mL</span>
+            </div>
+            <div class="chart-wrap lab-chart-wrap">
+              <canvas
+                id="lab-chart"
+                role="img"
+                aria-label="雌二醇真实化验趋势图"
+              >雌二醇真实化验趋势图</canvas>
+              <div class="chart-empty" id="lab-chart-empty">
+                <i data-lucide="flask-conical" aria-hidden="true"></i>
+                <strong>还没有化验数据</strong>
+                <p>至少录入一条化验，才能绘制真实趋势。</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="lab-layout">
+            <section class="table-panel" aria-label="化验记录列表">
+              <div class="panel-header table-panel-header">
+                <div>
+                  <p class="panel-kicker">HISTORY</p>
+                  <h2>全部化验</h2>
+                </div>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table lab-table">
+                  <thead>
+                    <tr>
+                      <th>采血时间</th>
+                      <th>E2</th>
+                      <th>睾酮</th>
+                      <th>催乳素</th>
+                      <th>备注</th>
+                      <th><span class="sr-only">操作</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="lab-table-body"></tbody>
+                </table>
+              </div>
+              <div class="table-empty" id="lab-table-empty">
+                <i data-lucide="flask-conical" aria-hidden="true"></i>
+                <strong>还没有真实化验</strong>
+                <p>真实结果不会被模型估算覆盖。</p>
+              </div>
+            </section>
+
+            <aside class="guidance-panel">
+              <div class="guidance-heading">
+                <i data-lucide="circle-help" aria-hidden="true"></i>
+                <h2>读化验前先看</h2>
+              </div>
+              <ol>
+                <li><span>01</span>记录采血时间与末次给药时间。</li>
+                <li><span>02</span>不同实验室、单位与检测方法不可直接混用。</li>
+                <li><span>03</span>单次结果不等于整条曲线，趋势更有意义。</li>
+                <li><span>04</span>参考带不是处方目标，解释与调整交给临床医生。</li>
+              </ol>
+              <button class="text-button" type="button" data-view="safety">
+                查看引用与限制
+                <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+              </button>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="library" aria-labelledby="library-title" hidden>
+          <header class="page-heading compact-heading">
+            <div>
+              <p class="eyebrow">MEDICATION LIBRARY</p>
+              <h1 id="library-title">药品资料库</h1>
+              <p class="page-subtitle">
+                用于识别剂型与记录单位，不包含起始、加量或减量建议。
+              </p>
+            </div>
+            <span class="library-count" id="library-count">16 条资料</span>
+          </header>
+
+          <div class="toolbar library-toolbar">
+            <label class="search-field library-search" for="medication-search">
+              <i data-lucide="search" aria-hidden="true"></i>
+              <input id="medication-search" type="search" placeholder="搜索中英文名、缩写或标签" />
+            </label>
+            <div class="filter-chips" id="category-filter" role="group" aria-label="药品类别筛选"></div>
+          </div>
+
+          <div class="model-key">
+            <span><i class="key-dot modeled"></i>可估算雌二醇曲线</span>
+            <span><i class="key-dot log-only"></i>仅做用药记录</span>
+          </div>
+
+          <div class="medication-grid" id="medication-grid"></div>
+          <div class="table-empty" id="medication-empty" hidden>
+            <i data-lucide="search-x" aria-hidden="true"></i>
+            <strong>没有匹配的药品</strong>
+            <p>试试英文名、缩写或更短的搜索词。</p>
+          </div>
+          <p class="library-disclaimer">
+            药品库不是完整处方集，也不代表任何药物在所有地区均已获批。规格、适应证与监管状态请以当地产品标签和医生意见为准。
+          </p>
+        </section>
+
+        <section class="view" data-view-panel="safety" aria-labelledby="safety-title" hidden>
+          <header class="page-heading compact-heading">
+            <div>
+              <p class="eyebrow">MODEL &amp; SAFETY</p>
+              <h1 id="safety-title">模型与安全说明</h1>
+              <p class="page-subtitle">知道它能做什么，更重要的是知道它不能做什么。</p>
+            </div>
+            <span class="safety-seal">
+              <i data-lucide="shield-check" aria-hidden="true"></i>
+              NON-DIAGNOSTIC
+            </span>
+          </header>
+
+          <div class="safety-callout">
+            <div class="safety-callout-icon">
+              <i data-lucide="triangle-alert" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h2>这不是血检设备，也不提供处方建议。</h2>
+              <p>
+                MIRA 显示的是基于公开人群药代参数的数学估算，不是实际检测结果。它不能用于自行开始、停药、加量、减量、补服或判断是否中毒。任何用药决定都应由熟悉跨性别医疗的合格临床医生作出。
+              </p>
+            </div>
+          </div>
+
+          <div class="safety-grid">
+            <section class="info-panel">
+              <p class="panel-kicker">HOW THE CURVE WORKS</p>
+              <h2>估算如何生成</h2>
+              <ol class="method-list">
+                <li><span>01</span><p>读取你手动录入的剂量、给药时间和可选重复间隔。</p></li>
+                <li><span>02</span><p>对支持的雌二醇剂型运行相应的一室、双通路或三室药代模型。</p></li>
+                <li><span>03</span><p>叠加每次给药的残余贡献，得到外源雌二醇示意曲线。</p></li>
+                <li><span>04</span><p>将真实化验以独立散点显示，便于观察模型偏差。</p></li>
+              </ol>
+            </section>
+
+            <section class="info-panel">
+              <p class="panel-kicker">LIMITS</p>
+              <h2>为什么会有偏差</h2>
+              <ul class="limit-list">
+                <li>个体吸收、代谢、体重、肝肾功能和 SHBG 均可能不同。</li>
+                <li>注射部位、针剂载体和贴片黏附会改变实际释放。</li>
+                <li>模型点估计不包含内源雌二醇和全部药物相互作用。</li>
+                <li>抗雄药、GnRH 激动剂与孕激素不提供雌二醇模型；口服、舌下、凝胶采用固定标准假设。</li>
+                <li>采样时间错误、单位换算失误会显著影响对照。</li>
+              </ul>
+            </section>
+          </div>
+
+          <section class="reference-section" aria-labelledby="reference-title">
+            <div class="section-heading-row">
+              <div>
+                <p class="panel-kicker">REFERENCES &amp; LICENSES</p>
+                <h2 id="reference-title">公开资料与许可</h2>
+              </div>
+              <p>只纳入可公开访问的资料，并明确许可证与使用范围。</p>
+            </div>
+            <div class="source-list" id="source-list"></div>
+          </section>
+
+          <section class="data-section" aria-labelledby="data-title">
+            <div>
+              <p class="panel-kicker">YOUR DATA</p>
+              <h2 id="data-title">你的数据，由你带走。</h2>
+              <p>所有记录保存在当前浏览器的 localStorage 中。导出文件便于备份，也可以随时导入到另一台设备。</p>
+            </div>
+            <div class="data-actions">
+              <button class="ghost-button" type="button" data-dialog-open="report-dialog">
+                <i data-lucide="file-text" aria-hidden="true"></i>
+                临床沟通单
+              </button>
+              <button class="ghost-button" type="button" id="export-json-button">
+                <i data-lucide="download" aria-hidden="true"></i>
+                导出全部数据
+              </button>
+              <label class="ghost-button upload-button" for="import-file">
+                <i data-lucide="upload" aria-hidden="true"></i>
+                导入备份
+                <input id="import-file" type="file" accept="application/json,.json" />
+              </label>
+              <button class="danger-button" type="button" id="clear-data-button">
+                <i data-lucide="trash-2" aria-hidden="true"></i>
+                清空数据
+              </button>
+            </div>
+          </section>
+        </section>
+
+        <footer class="app-footer">
+          <p>MIRA · Educational HRT log and model estimate.</p>
+          <p>Not medical advice. Verify units and timing with your clinician.</p>
+        </footer>
+      </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="移动端导航">
+      <button class="is-active" type="button" data-view="overview">
+        <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+        <span>总览</span>
+      </button>
+      <button type="button" data-view="guide">
+        <i data-lucide="book-marked" aria-hidden="true"></i>
+        <span>指南</span>
+      </button>
+      <button type="button" data-view="doses">
+        <i data-lucide="pill" aria-hidden="true"></i>
+        <span>用药</span>
+      </button>
+      <button type="button" data-view="labs">
+        <i data-lucide="flask-conical" aria-hidden="true"></i>
+        <span>化验</span>
+      </button>
+      <button type="button" data-view="library">
+        <i data-lucide="book-open" aria-hidden="true"></i>
+        <span>药品</span>
+      </button>
+      <button type="button" data-view="safety">
+        <i data-lucide="shield-check" aria-hidden="true"></i>
+        <span>安全</span>
+      </button>
+    </nav>
+
+    <dialog class="modal" id="dose-dialog" aria-labelledby="dose-dialog-title">
+      <form class="modal-form" id="dose-form" novalidate>
+        <div class="modal-header">
+          <div>
+            <p class="panel-kicker">NEW ENTRY</p>
+            <h2 id="dose-dialog-title">记录一次用药</h2>
+            <p>只记录你已经获得的处方或实际使用情况。</p>
+          </div>
+          <button class="icon-button" type="button" data-dialog-close aria-label="关闭">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body form-body">
+          <div class="form-grid">
+            <label class="field field-span-2" for="dose-medication">
+              <span>药品 <b>*</b></span>
+              <select id="dose-medication" name="medication" required>
+                <option value="">选择药品</option>
+              </select>
+            </label>
+
+            <div class="selected-medication field-span-2" id="selected-medication" hidden></div>
+
+            <section class="dose-extra-fields field-span-2" id="dose-extra-fields" aria-label="剂型专属信息" hidden>
+              <div class="dose-extra-heading">
+                <div>
+                  <p class="panel-kicker">FORM DETAILS</p>
+                  <h3>剂型专属信息</h3>
+                </div>
+                <span>用于模型或临床记录</span>
+              </div>
+
+              <div class="dose-extra-group" data-extra-group="gel" hidden>
+                <label class="field" for="gel-concentration">
+                  <span>产品浓度（mg/g）</span>
+                  <div class="input-with-suffix">
+                    <input id="gel-concentration" type="number" min="0.01" max="10" step="0.01" value="0.6" />
+                    <span>mg/g</span>
+                  </div>
+                </label>
+                <label class="field" for="gel-area">
+                  <span>涂抹面积（cm²）</span>
+                  <div class="input-with-suffix">
+                    <input id="gel-area" type="number" min="1" max="5000" step="1" value="750" />
+                    <span>cm²</span>
+                  </div>
+                </label>
+                <label class="field" for="gel-site">
+                  <span>涂抹部位</span>
+                  <select id="gel-site">
+                    <option value="arm">上臂 / 前臂</option>
+                    <option value="thigh">大腿</option>
+                    <option value="abdomen">腹部</option>
+                  </select>
+                </label>
+                <div class="field checkbox-field" for="gel-wash">
+                  <span>是否清洗</span>
+                  <label class="checkbox-control" for="gel-wash">
+                    <input id="gel-wash" type="checkbox" />
+                    <span>数小时后清洗涂抹部位</span>
+                  </label>
+                </div>
+                <label class="field conditional-field" id="gel-wash-hours-field" for="gel-wash-hours" hidden>
+                  <span>清洗时间</span>
+                  <div class="input-with-suffix">
+                    <input id="gel-wash-hours" type="number" min="0.25" max="24" step="0.25" value="1" />
+                    <span>小时后</span>
+                  </div>
+                </label>
+                <p class="dose-extra-note">
+                  当前模型会使用浓度、面积、部位与清洗时间，但载体假设仍采用 Oestrogel 标准参数。
+                </p>
+              </div>
+
+              <div class="dose-extra-group" data-extra-group="sublingual" hidden>
+                <label class="field" for="sublingual-hold">
+                  <span>含服时间</span>
+                  <select id="sublingual-hold">
+                    <option value="2">约 2 分钟</option>
+                    <option value="5">约 5 分钟</option>
+                    <option value="10" selected>约 10 分钟</option>
+                    <option value="15">约 15 分钟</option>
+                  </select>
+                </label>
+                <div class="field checkbox-field">
+                  <span>是否吞咽</span>
+                  <label class="checkbox-control" for="sublingual-swallowed">
+                    <input id="sublingual-swallowed" type="checkbox" checked />
+                    <span>含服后吞下唾液</span>
+                  </label>
+                </div>
+                <p class="dose-extra-note">
+                  含服时间会改变快速黏膜吸收比例；未吞咽时不再计入吞咽后的口服部分。
+                </p>
+              </div>
+
+              <div class="dose-extra-group" data-extra-group="oral" hidden>
+                <label class="field" for="oral-food">
+                  <span>与食物同服</span>
+                  <select id="oral-food">
+                    <option value="unknown">不确定 / 不记录</option>
+                    <option value="empty">空腹服用</option>
+                    <option value="with-food">随餐或餐后服用</option>
+                  </select>
+                </label>
+                <p class="dose-extra-note">
+                  饮食信息会写入用药记录和临床摘要；当前模型不施加未经校准的饮食修正。
+                </p>
+              </div>
+
+              <div class="dose-extra-group" data-extra-group="injection" hidden>
+                <label class="field" for="injection-oil">
+                  <span>载体油</span>
+                  <select id="injection-oil">
+                    <option value="unknown">未知 / 不记录</option>
+                    <option value="castor">蓖麻油</option>
+                    <option value="sesame">芝麻油</option>
+                    <option value="tea-seed">茶籽油</option>
+                    <option value="other">其他载体</option>
+                  </select>
+                </label>
+                <label class="field" for="injection-site">
+                  <span>注射部位</span>
+                  <select id="injection-site">
+                    <option value="unknown">未知 / 不记录</option>
+                    <option value="gluteal">臀肌</option>
+                    <option value="ventrogluteal">臀中肌</option>
+                    <option value="thigh">股外侧肌</option>
+                    <option value="deltoid">三角肌</option>
+                    <option value="subcutaneous">皮下</option>
+                  </select>
+                </label>
+                <p class="dose-extra-note">
+                  载体油和注射部位会保存在记录中，但当前公开模型未提供经过验证的校正参数。
+                </p>
+              </div>
+
+              <div class="dose-extra-group" data-extra-group="patch" hidden>
+                <label class="field" for="patch-brand">
+                  <span>贴片品牌 / 产品</span>
+                  <input id="patch-brand" type="text" maxlength="80" placeholder="例如：品牌、规格或包装名称" />
+                </label>
+                <label class="field" for="patch-interval">
+                  <span>更换周期（天）</span>
+                  <div class="input-with-suffix">
+                    <input id="patch-interval" type="number" min="0.5" max="14" step="0.5" value="3.5" />
+                    <span>天</span>
+                  </div>
+                </label>
+                <p class="dose-extra-note">
+                  更换周期用于未来投影；品牌与产品会写入记录和临床摘要，不自动改变吸收模型。
+                </p>
+              </div>
+            </section>
+
+            <label class="field" for="dose-amount">
+              <span>实际剂量 <b>*</b></span>
+              <div class="input-with-suffix">
+                <input
+                  id="dose-amount"
+                  name="dose"
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  inputmode="decimal"
+                  placeholder="输入你记录的数字"
+                  required
+                />
+                <span id="dose-unit-label">mg</span>
+              </div>
+            </label>
+
+            <label class="field" for="dose-time">
+              <span>给药时间 <b>*</b></span>
+              <input id="dose-time" name="takenAt" type="datetime-local" required />
+            </label>
+
+            <label class="field" id="dose-repeat-field" for="dose-repeat">
+              <span>重复间隔（天）</span>
+              <div class="input-with-suffix">
+                <input
+                  id="dose-repeat"
+                  name="repeatDays"
+                  type="number"
+                  min="0.25"
+                  max="90"
+                  step="0.25"
+                  placeholder="可选"
+                />
+                <span>天</span>
+              </div>
+              <small>仅用于延伸你已录入计划的未来估算。</small>
+            </label>
+
+            <label class="field" for="dose-note">
+              <span>备注</span>
+              <input id="dose-note" name="note" type="text" maxlength="120" placeholder="例如：左臀、换新品牌" />
+            </label>
+          </div>
+
+          <div class="form-note" id="dose-model-note">
+            <i data-lucide="info" aria-hidden="true"></i>
+            <p>选择药品后，这里会说明该药是否纳入浓度估算。</p>
+          </div>
+          <p class="form-error" id="dose-form-error" role="alert"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="ghost-button" type="button" data-dialog-close>取消</button>
+          <button class="primary-button" id="dose-submit-button" type="submit">
+            <i data-lucide="check" aria-hidden="true"></i>
+            <span>保存记录</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="lab-dialog" aria-labelledby="lab-dialog-title">
+      <form class="modal-form" id="lab-form" novalidate>
+        <div class="modal-header">
+          <div>
+            <p class="panel-kicker">LAB ENTRY</p>
+            <h2 id="lab-dialog-title">记录真实化验</h2>
+            <p>请按实验室报告原样录入，并核对单位。</p>
+          </div>
+          <button class="icon-button" type="button" data-dialog-close aria-label="关闭">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="modal-body form-body">
+          <div class="form-grid">
+            <label class="field field-span-2" for="lab-time">
+              <span>采血时间 <b>*</b></span>
+              <input id="lab-time" name="labAt" type="datetime-local" required />
+            </label>
+
+            <label class="field" for="lab-e2">
+              <span>雌二醇 E2</span>
+              <div class="input-with-suffix">
+                <input id="lab-e2" name="estradiol" type="number" min="0" step="any" inputmode="decimal" placeholder="可选" />
+                <select id="lab-e2-unit" aria-label="雌二醇单位">
+                  <option value="pg/mL">pg/mL</option>
+                  <option value="pmol/L">pmol/L</option>
+                </select>
+              </div>
+            </label>
+
+            <label class="field" for="lab-t">
+              <span>睾酮 T</span>
+              <div class="input-with-suffix">
+                <input id="lab-t" name="testosterone" type="number" min="0" step="any" inputmode="decimal" placeholder="可选" />
+                <select id="lab-t-unit" aria-label="睾酮单位">
+                  <option value="ng/dL">ng/dL</option>
+                  <option value="nmol/L">nmol/L</option>
+                </select>
+              </div>
+            </label>
+
+            <label class="field" for="lab-prl">
+              <span>催乳素 PRL</span>
+              <div class="input-with-suffix">
+                <input id="lab-prl" name="prolactin" type="number" min="0" step="any" inputmode="decimal" placeholder="可选" />
+                <span>ng/mL</span>
+              </div>
+            </label>
+
+            <label class="field" for="lab-note">
+              <span>检测备注</span>
+              <input id="lab-note" name="note" type="text" maxlength="120" placeholder="实验室、末次给药距采血时间" />
+            </label>
+          </div>
+
+          <div class="form-note">
+            <i data-lucide="clock-3" aria-hidden="true"></i>
+            <p>采血时点会显著影响结果。建议在备注中写明距末次给药的间隔。</p>
+          </div>
+          <p class="form-error" id="lab-form-error" role="alert"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="ghost-button" type="button" data-dialog-close>取消</button>
+          <button class="primary-button" type="submit">
+            <i data-lucide="check" aria-hidden="true"></i>
+            保存化验
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal medication-modal" id="medication-dialog" aria-labelledby="medication-dialog-title">
+      <div id="medication-dialog-content"></div>
+    </dialog>
+
+    <dialog class="modal report-modal" id="report-dialog" aria-labelledby="report-dialog-title">
+      <div class="modal-header report-modal-header">
+        <div>
+          <p class="panel-kicker">CLINICIAN SUMMARY</p>
+          <h2 id="report-dialog-title">临床沟通摘要</h2>
+          <p>生成一页 A4 报告，在打印窗口选择“另存为 PDF”。</p>
+        </div>
+        <button class="icon-button" type="button" data-dialog-close aria-label="关闭">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="report-dialog-body">
+        <div class="report-toolbar">
+          <label class="report-date-field" for="report-start-date">
+            <span>开始日期</span>
+            <input id="report-start-date" type="date" />
+          </label>
+          <span class="report-date-separator" aria-hidden="true">→</span>
+          <label class="report-date-field" for="report-end-date">
+            <span>结束日期</span>
+            <input id="report-end-date" type="date" />
+          </label>
+          <div class="report-presets" role="group" aria-label="报告日期范围">
+            <button type="button" data-report-range="30">30D</button>
+            <button type="button" data-report-range="90" class="is-active">90D</button>
+            <button type="button" data-report-range="180">180D</button>
+          </div>
+          <p class="report-entry-count" id="report-entry-count">—</p>
+        </div>
+        <div class="report-preview-shell">
+          <article class="report-page" id="report-preview-page"></article>
+        </div>
+        <p class="report-print-hint">
+          <i data-lucide="printer" aria-hidden="true"></i>
+          <span>点击导出后会打开系统打印窗口。选择“另存为 PDF / Save as PDF”，纸张建议 A4、纵向、页边距默认。</span>
+        </p>
+      </div>
+      <div class="modal-footer report-modal-footer">
+        <button class="ghost-button" type="button" data-dialog-close>取消</button>
+        <button class="primary-button" id="print-report-button" type="button">
+          <i data-lucide="printer" aria-hidden="true"></i>
+          导出 PDF
+        </button>
+      </div>
+    </dialog>
+
+    <div
+      class="onboarding-layer"
+      id="onboarding-layer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="MIRA onboarding"
+      hidden
+    >
+      <div class="onboarding-frame">
+        <aside class="onboarding-aside">
+          <a class="brand onboarding-brand" href="#" tabindex="-1" aria-hidden="true">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="brand-copy">
+              <strong>MIRA</strong>
+              <small>HRT STUDIO</small>
+            </span>
+          </a>
+          <div class="onboarding-aside-copy">
+            <p id="onboarding-kicker">WELCOME TO MIRA</p>
+            <h1 id="onboarding-meaning">
+              MIRA 来自西班牙语 mirar，意为“看见”。
+            </h1>
+            <p id="onboarding-aside-copy">
+              让用药与化验变得清楚，让决定回到你与临床医生之间。
+            </p>
+          </div>
+          <div class="onboarding-aside-visual">
+            <img
+              src="assets/medication-still-life.jpg"
+              alt="药品静物视觉"
+              width="1400"
+              height="979"
+            />
+            <div>
+              <span><i data-lucide="lock-keyhole" aria-hidden="true"></i> LOCAL-FIRST</span>
+              <strong>Your data stays yours.</strong>
+            </div>
+          </div>
+        </aside>
+        <section class="onboarding-main">
+          <header class="onboarding-header">
+            <div class="onboarding-progress" id="onboarding-progress" aria-hidden="true"></div>
+            <button
+              class="icon-button onboarding-close"
+              id="onboarding-close"
+              type="button"
+              aria-label="关闭引导"
+              hidden
+            >
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div class="onboarding-content" id="onboarding-content"></div>
+          <footer class="onboarding-footer">
+            <button class="ghost-button" id="onboarding-back" type="button">
+              <i data-lucide="arrow-left" aria-hidden="true"></i>
+              <span>返回</span>
+            </button>
+            <span class="onboarding-step-label" id="onboarding-step-label"></span>
+            <button class="primary-button" id="onboarding-next" type="button">
+              <span>继续</span>
+              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            </button>
+          </footer>
+        </section>
+      </div>
+    </div>
+
+    <section
+      class="clinical-report-print"
+      id="clinical-report"
+      aria-hidden="true"
+    ></section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <i data-lucide="check" aria-hidden="true"></i>
+      <span>已保存</span>
+    </div>
+  </body>
+</html>
