@@ -279,6 +279,8 @@ export function reportCopy(languageId) {
 }
 
 const EN_TEXT = {
+  "导出化验 CSV": "Export lab CSV",
+  "化验 CSV 已导出": "Laboratory CSV exported",
   "跳到主要内容": "Skip to main content",
   总览: "Overview",
   "HRT 指南": "HRT Guide",

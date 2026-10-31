@@ -19,6 +19,7 @@ import {
   getFutureDoseMarkers,
 } from "../src/model.js";
 import { buildClinicalReportData } from "../src/report.js";
+import { validateBackup, csvCell, labsCsv } from "../src/backup.js";
 import {
   SUPPORTED_LANGUAGES,
   languageDefinition,
@@ -3126,6 +3127,7 @@ function downloadBlob(filename, content, type) {
 function exportJson() {
   const payload = {
     app: "MIRA HRT Studio",
+    appVersion: "2.0.0",
     version: 1,
     exportedAt: new Date().toISOString(),
     data: state.data,
@@ -3138,12 +3140,13 @@ function exportJson() {
   showToast("数据备份已导出");
 }
 
-function csvCell(value) {
-  let text = String(value ?? "");
-  if (/^[=+\-@]/.test(text)) {
-    text = `'${text}`;
-  }
-  return `"${text.replaceAll('"', '""')}"`;
+function exportLabsCsv() {
+  downloadBlob(
+    `mira-lab-log-${new Date().toISOString().slice(0, 10)}.csv`,
+    labsCsv(state.data.labs, state.data.settings.isDemo),
+    "text/csv;charset=utf-8",
+  );
+  showToast("化验 CSV 已导出");
 }
 
 function exportDosesCsv() {
@@ -3202,20 +3205,21 @@ async function importBackup(file) {
   }
   try {
     const parsed = JSON.parse(await file.text());
-    const imported = normalizeState(parsed.data ?? parsed);
-    imported.settings.isDemo = false;
+    const imported = normalizeState(validateBackup(parsed));
     imported.settings.language = currentLanguage();
     imported.settings.onboardingCompleted = true;
-    const confirmed = window.confirm(
-      toCurrentLanguage(
-        "导入会替换当前浏览器中的全部用药与化验记录。确定继续吗？",
-      ),
-    );
+    const counts = currentLanguage() === "en"
+      ? `Current: ${state.data.doses.length} medications, ${state.data.labs.length} labs.\nIncoming: ${imported.doses.length} medications, ${imported.labs.length} labs.${imported.settings.isDemo ? "\nDEMO DATA" : ""}`
+      : toCurrentLanguage(`当前：${state.data.doses.length} 条用药、${state.data.labs.length} 条化验。\n导入：${imported.doses.length} 条用药、${imported.labs.length} 条化验。${imported.settings.isDemo ? "\n演示数据" : ""}`);
+    const confirmed = window.confirm(`${counts}\n\n${toCurrentLanguage(
+      "导入会替换当前浏览器中的全部用药与化验记录。确定继续吗？",
+    )}`);
     if (!confirmed) {
       return;
     }
+    // Save first: a blocked/full browser store must not replace the visible records.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(imported));
     state.data = imported;
-    persist();
     renderAll();
     switchView("overview");
     showToast("备份已导入");
@@ -3570,6 +3574,7 @@ function bindEvents() {
   state.els.resetDemoButton.addEventListener("click", resetDemo);
   state.els.clearDemoButton.addEventListener("click", clearToEmpty);
   getElement("export-doses-button").addEventListener("click", exportDosesCsv);
+  getElement("export-labs-button").addEventListener("click", exportLabsCsv);
   getElement("export-json-button").addEventListener("click", exportJson);
   getElement("clear-data-button").addEventListener("click", clearAllData);
   getElement("import-file").addEventListener("change", (event) => {
